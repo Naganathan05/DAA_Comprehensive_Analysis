@@ -2,6 +2,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <numeric>
+#include <algorithm>
+#include <queue>
 #include <utility>
 
 using namespace std;
@@ -31,12 +34,13 @@ public:
 
     bool checkValidPath(unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Snakes,
                         unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Ladders,
-                        int dimension, int i, int j, vector<vector<int>> &dp) {
+                        int dimension, int i, int j, vector<vector<int>> &dp, vector<vector<bool>> &visited) {
 
         if (i == dimension - 1 && j == dimension - 1) return true;
-        if (i < 0 || j < 0 || i >= dimension || j >= dimension) return false;
+        if (i < 0 || j < 0 || i >= dimension || j >= dimension || visited[i][j]) return false;
 
         if (dp[i][j] != -1) return dp[i][j];
+        visited[i][j] = true;
 
         vector<int> diceRolls = {1, 2, 3, 4, 5, 6};
         bool reachEnd = false;
@@ -56,39 +60,45 @@ public:
                 newY = ladderTop.second;
             }
 
-            reachEnd |= checkValidPath(Snakes, Ladders, dimension, newX, newY, dp);
+            reachEnd |= checkValidPath(Snakes, Ladders, dimension, newX, newY, dp, visited);
             if (reachEnd) break;
         }
+        visited[i][j] = false;
         return dp[i][j] = reachEnd;
     }
 
-    bool viablePath(unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Snakes,
-                    unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Ladders,
-                    int dimension, int i, int j, int k, vector<vector<int>> &dp) {
+    int shortestPath(unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Snakes,
+                      unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Ladders,
+                      int n, vector<pair<int, int>> &cells, vector<vector<int>> &mapNumbers){
+        vector<bool> visited(n * n + 1, false);
+        queue<pair<int, int>> fifo;
+        fifo.push({0, 1});
+        visited[1] = true;
+        while (!fifo.empty()) {
+            int currSteps = fifo.front().first;
+            int curr = fifo.front().second;
+            fifo.pop();
 
-        if (i == dimension - 1 && j == dimension - 1) return true;
-        if (i < 0 || j < 0 || i >= dimension || j >= dimension) return false;
+            if(curr == n * n) return currSteps + 3;
 
-        if (dp[i][j] != -1) return dp[i][j];
-
-        bool reachEnd = false;
-        
-        int newY = (j + k) % dimension;
-        int newX = i + (j + k) / dimension;
-
-        if (Snakes.find({newX, newY}) != Snakes.end()) {
-            pair<int, int> snakeTail = Snakes[{newX, newY}];
-            newX = snakeTail.first;
-            newY = snakeTail.second;
+            for (int next = curr + 1; next <= min(curr + 6, n * n); next++) {
+                auto [row, column] = cells[next];
+                int destination = next;
+                if(Snakes.find({row, column}) != Snakes.end()) {
+                    auto snakeTail = Snakes[{row, column}];
+                    destination = mapNumbers[snakeTail.first][snakeTail.second];
+                }
+                if(Ladders.find({row, column}) != Ladders.end()) {
+                    auto ladderTop = Ladders[{row, column}];
+                    destination = mapNumbers[ladderTop.first][ladderTop.second];
+                }
+                if(!visited[destination]){
+                    visited[destination] = true;
+                    fifo.push({currSteps + 1, destination});
+                }
+            }
         }
-        else if (Ladders.find({newX, newY}) != Ladders.end()) {
-            pair<int, int> ladderTop = Ladders[{newX, newY}];
-            newX = ladderTop.first;
-            newY = ladderTop.second;
-        }
-
-        reachEnd = viablePath(Snakes, Ladders, dimension, newX, newY, k, dp);
-        return dp[i][j] = reachEnd;
+        return -1;
     }
 
     bool DFS(unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Snakes,
@@ -150,88 +160,54 @@ public:
         return DFS(Snakes, Ladders, 0, 0, dimension, visited, recStack);
     }
 
-    void fillSnakeLadder(unordered_map<pair<int, int>, pair<int, int>, pair_hash> &adjList, int numInputs){
+    void fillSnakeLadder(unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Snakes, unordered_map<pair<int, int>, pair<int, int>, pair_hash> &Ladders, vector<pair<int, int>> &cells){
+        int numInputs;
+        cin >> numInputs;
+
         for(int i = 0; i < numInputs; i++){
-            int startX, startY, endX, endY;
-            cout << "Enter The Starting X Coordinate: ";
-            cin >> startX;
-            cout << "Enter The Starting Y Coordinate: ";
-            cin >> startY;
-            cout << "Enter The Ending X Coordinate: ";
-            cin >> endX;
-            cout << "Enter The Ending Y Coordinate: ";
-            cin >> endY;
+            int start, startY, end, endY;
+            string item;
+            cin >> item;
+            cin >> start;
+            cin >> end;
             
-            adjList[{startX, startY}] = {endX, endY};
+            if(item == "Snake") Snakes[cells[start]] = cells[end];
+            else Ladders[cells[start]] = cells[end];
         }
+        return;
     }
 };
 
 int main() {
     SnakeLadder game;
 
-    int dimension = 5;
+    int dimension = 10, lbl = 1;
 
     unordered_map<pair<int, int>, pair<int, int>, pair_hash> snakes;
     unordered_map<pair<int, int>, pair<int, int>, pair_hash> ladders;
 
-    cout << "Test Case 1: Valid board without cycles" << endl;
-    snakes = {
-        {{1, 1}, {2, 2}},
-        {{2, 0}, {3, 1}},
-        {{0, 3}, {1, 4}}
-    };
-    ladders = {
-        {{0, 1}, {2, 1}},
-        {{1, 2}, {2, 3}},
-        {{3, 0}, {4, 0}}
-    };
+    vector<pair<int, int>> cells(101);
+    vector<vector<int>> mapNumbers(10, vector<int> (10, 0));
+    vector<int> columns(10);
+    iota(columns.begin(), columns.end(), 0);
+    for (int row = 9; row >= 0; row--) {
+        for (int column : columns) {
+            cells[lbl] = {row, column};
+            mapNumbers[row][column] = lbl;
+            lbl += 1;
+        }
+        reverse(columns.begin(), columns.end());
+    }
+    game.fillSnakeLadder(snakes, ladders, cells);
+
+    cout << "------------------------------------------------------------" << endl;
     cout << "Checking for cycles: " << (game.checkCycle(snakes, ladders, dimension) ? "Cycle detected!" : "No cycles detected.") << endl;
     cout << "----------------------------------------------------------" << endl;
 
-    cout << "Test Case 2: Board with a cycle" << endl;
-    snakes = {
-        {{1, 1}, {2, 2}},
-        {{2, 0}, {3, 1}},
-        {{3, 1}, {1, 1}}
-    };
-    ladders = {
-        {{0, 1}, {2, 1}},
-        {{1, 2}, {2, 3}},
-        {{3, 0}, {4, 0}}
-    };
-    cout << "Checking for cycles: " << (game.checkCycle(snakes, ladders, dimension) ? "Cycle detected!" : "No cycles detected.") << endl;
-    cout << "----------------------------------------------------------" << endl;
-
-    cout << "Test Case 3: Duplicate snakes or ladders" << endl;
-    snakes = {
-        {{1, 1}, {2, 2}},
-        {{2, 2}, {1, 1}}
-    };
-    ladders = {
-        {{0, 1}, {2, 1}},
-        {{1, 2}, {2, 3}},
-        {{2, 1}, {0, 1}}
-    };
     cout << "Checking for duplicates: " << (game.checkDuplicates(snakes, ladders) ? "No duplicates detected!" : "Duplicates detected!") << endl;
     cout << "----------------------------------------------------------" << endl;
 
-    cout << "Test Case 4: Large board" << endl;
-    dimension = 10;
-    snakes = {
-        {{1, 1}, {3, 3}},
-        {{2, 2}, {4, 4}},
-        {{5, 5}, {7, 7}},
-        {{6, 6}, {8, 8}}
-    };
-    ladders = {
-        {{0, 1}, {2, 2}},
-        {{1, 2}, {3, 3}},
-        {{2, 3}, {4, 4}},
-        {{3, 4}, {5, 5}}
-    };
-    cout << "Checking for cycles: " << (game.checkCycle(snakes, ladders, dimension) ? "Cycle detected!" : "No cycles detected.") << endl;
+    cout << "Shortest Path: " << game.shortestPath(snakes, ladders, dimension, cells, mapNumbers) << endl;
     cout << "----------------------------------------------------------" << endl;
-
     return 0;
 }
