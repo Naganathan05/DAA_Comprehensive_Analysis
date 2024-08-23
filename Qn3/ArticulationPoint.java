@@ -49,46 +49,31 @@ class ArticulationPoint {
 
 public class Main {
     public static void main(String[] args) {
-        Runtime runtime = Runtime.getRuntime();
-        // Start measuring time and memory
-        long startTime = System.nanoTime();
-        long startMemory = runtime.totalMemory() - runtime.freeMemory();
-        long maxMemoryUsed = startMemory;
+        try {
+            File file = new File("testCase1.txt");
+            Scanner scanner = new Scanner(file);
 
-        int n = 15;  // Updated number of vertices
-        int[][] edges = {
-            {1, 2}, {1, 3}, {2, 4}, {3, 4}, {1, 4},
-            {4, 9}, {4, 5}, {9, 12}, {9, 13}, {9, 14}, {12, 14},
-            {13, 14}, {5, 6}, {5, 7}, {6, 7}, {7, 8}, {8, 11},
-            {11, 10}, {8, 10}
-        };
-        ArrayList<ArrayList<Integer>> adj = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            adj.add(new ArrayList<>());
-            long currentMemory = runtime.totalMemory() - runtime.freeMemory();
-            maxMemoryUsed = Math.max(maxMemoryUsed, currentMemory);
+            int n = scanner.nextInt();
+            ArrayList<ArrayList<Integer>> adj = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                adj.add(new ArrayList<>());
+            }
+
+            while (scanner.hasNextInt()) {
+                int u = scanner.nextInt();
+                int v = scanner.nextInt();
+                adj.get(u).add(v);
+                adj.get(v).add(u);
+            }
+
+            scanner.close();
+
+            ArticulationPoint obj = new ArticulationPoint();
+            ArrayList<Integer> nodes = obj.articulationPoints(n, adj);
+
+            System.out.println("Articulation points in the graph are: " + nodes);
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found.");
         }
-        for (int[] edge : edges) {
-            int u = edge[0], v = edge[1];
-            adj.get(u).add(v);
-            adj.get(v).add(u);
-            long currentMemory = runtime.totalMemory() - runtime.freeMemory();
-            maxMemoryUsed = Math.max(maxMemoryUsed, currentMemory);
-        }
-
-        ArticulationPoint obj = new ArticulationPoint();
-        ArrayList<Integer> nodes = obj.articulationPoints(n, adj);
-
-        // End measuring time and memory
-        long endTime = System.nanoTime();
-        long endMemory = runtime.totalMemory() - runtime.freeMemory();
-
-        maxMemoryUsed = Math.max(maxMemoryUsed, endMemory);
-
-        long timeElapsed = endTime - startTime;
-
-        System.out.println("Articulation points in the graph are: " + nodes);
-        System.out.println("Time taken : " + timeElapsed / 1000 + " ms");
-        System.out.println("Maximum memory used: " + maxMemoryUsed  / 1000 + " KB");
     }
 }

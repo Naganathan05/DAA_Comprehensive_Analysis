@@ -1,21 +1,23 @@
 import java.util.*;
+import java.io.*;
 
-class bridges {
+class Bridges {
     int timer = 1;
 
     public void DFS(List<List<Integer>> adjList, int server, int parent, int[] tin, int[] low, boolean[] visited, List<List<Integer>> bridges) {
         visited[server] = true;
         low[server] = tin[server] = timer;
         timer += 1;
-        
+
         for (int it : adjList.get(server)) {
             if (it == parent) continue;
             if (!visited[it]) {
                 DFS(adjList, it, server, tin, low, visited, bridges);
                 low[server] = Math.min(low[server], low[it]);
                 if (low[it] > tin[server]) bridges.add(Arrays.asList(server, it));
-            } 
-            else low[server] = Math.min(low[server], low[it]);
+            } else {
+                low[server] = Math.min(low[server], low[it]);
+            }
         }
     }
 
@@ -38,25 +40,22 @@ class bridges {
 }
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("testCase1.txt"));
+        String[] firstLine = br.readLine().split(" ");
+        int n = Integer.parseInt(firstLine[0]);
+        int m = Integer.parseInt(firstLine[1]);
 
-        int n = 12;
         List<List<Integer>> connections = new ArrayList<>();
-        connections.add(Arrays.asList(1, 2));
-        connections.add(Arrays.asList(2, 3));
-        connections.add(Arrays.asList(3, 4));
-        connections.add(Arrays.asList(1, 4));
-        connections.add(Arrays.asList(4, 5));
-        connections.add(Arrays.asList(5, 6));
-        connections.add(Arrays.asList(6, 7));
-        connections.add(Arrays.asList(7, 8));
-        connections.add(Arrays.asList(8, 9));
-        connections.add(Arrays.asList(9, 6));
-        connections.add(Arrays.asList(8, 10));
-        connections.add(Arrays.asList(10, 11));
-        connections.add(Arrays.asList(10, 12));
+        for (int i = 0; i < m; i++) {
+            String[] edge = br.readLine().split(" ");
+            int u = Integer.parseInt(edge[0]);
+            int v = Integer.parseInt(edge[1]);
+            connections.add(Arrays.asList(u, v));
+        }
+        br.close();
 
-        bridges obj = new bridges();
+        Bridges obj = new Bridges();
         List<List<Integer>> bridges = obj.criticalConnections(n, connections);
 
         System.out.println("Bridges (Critical Connections) in the graph are: " + bridges);

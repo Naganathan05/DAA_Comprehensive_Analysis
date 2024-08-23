@@ -1,4 +1,5 @@
 import java.util.*;
+import java.io.*;
 
 class dijkstras {
     public int[] dijkstra(int n, List<List<int[]>> adjList, int src) {
@@ -32,47 +33,36 @@ class dijkstras {
 
 public class Main {
     public static void main(String[] args) {
-        int n = 9;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("testCase1.txt"));
+            String[] firstLine = br.readLine().split(" ");
+            int n = Integer.parseInt(firstLine[0]);  // Number of vertices
+            int m = Integer.parseInt(firstLine[1]);  // Number of edges
 
-        List<List<int[]>> adjList = new ArrayList<>();
-        for (int i = 0; i < n; i++) adjList.add(new ArrayList<>());
+            List<List<int[]>> adjList = new ArrayList<>();
+            for (int i = 0; i < n; i++) adjList.add(new ArrayList<>());
 
-        // Add edges: (src, dest, weight)
-        adjList.get(0).add(new int[]{1, 4});
-        adjList.get(0).add(new int[]{7, 8});
-        adjList.get(1).add(new int[]{0, 4});
-        adjList.get(1).add(new int[]{2, 8});
-        adjList.get(1).add(new int[]{7, 11});
-        adjList.get(2).add(new int[]{1, 8});
-        adjList.get(2).add(new int[]{3, 7});
-        adjList.get(2).add(new int[]{8, 2});
-        adjList.get(2).add(new int[]{5, 4});
-        adjList.get(3).add(new int[]{2, 7});
-        adjList.get(3).add(new int[]{4, 9});
-        adjList.get(4).add(new int[]{3, 9});
-        adjList.get(4).add(new int[]{5, 10});
-        adjList.get(5).add(new int[]{2, 4});
-        adjList.get(5).add(new int[]{4, 10});
-        adjList.get(5).add(new int[]{6, 2});
-        adjList.get(6).add(new int[]{5, 2});
-        adjList.get(6).add(new int[]{7, 1});
-        adjList.get(6).add(new int[]{8, 6});
-        adjList.get(7).add(new int[]{0, 8});
-        adjList.get(7).add(new int[]{1, 11});
-        adjList.get(7).add(new int[]{6, 1});
-        adjList.get(7).add(new int[]{8, 7});
-        adjList.get(8).add(new int[]{2, 2});
-        adjList.get(8).add(new int[]{6, 6});
-        adjList.get(8).add(new int[]{7, 7});
+            for (int i = 0; i < m; i++) {
+                String[] edgeInfo = br.readLine().split(" ");
+                int u = Integer.parseInt(edgeInfo[0]);
+                int v = Integer.parseInt(edgeInfo[1]);
+                int weight = Integer.parseInt(edgeInfo[2]);
+                adjList.get(u).add(new int[]{v, weight});
+                adjList.get(v).add(new int[]{u, weight}); 
+            }
 
-        int src = 0;
+            int src = 0;  
 
-        dijkstras obj = new dijkstras();
-        int[] distances = obj.dijkstra(n, adjList, src);
+            dijkstras obj = new dijkstras();
+            int[] distances = obj.dijkstra(n, adjList, src);
 
-        System.out.println("Shortest distances from vertex " + src + " are:");
-        for (int i = 0; i < distances.length; i++) {
-            System.out.print(distances[i] + " ");
+            System.out.println("Shortest distances from vertex " + src + " are:");
+            for (int i = 0; i < distances.length; i++) {
+                System.out.print(distances[i] + " ");
+            }
+            System.out.println();
+        } catch (IOException e) {
+            System.out.println("Error reading input file.");
         }
     }
 }
