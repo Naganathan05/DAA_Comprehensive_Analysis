@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 
@@ -23,22 +24,22 @@ public:
 };
 
 int main() {
-    LCSOptimizer lcsOptimizer;
+    string A, B;
 
-    // Test case 1
-    string text1 = "ABCBDAB";
-    string text2 = "BDCAB";
-    cout << "Length of Longest Common Subsequence: " << lcsOptimizer.longestCommonSubsequence(text1, text2) << endl;
+    ifstream inputFile("testCase1.txt");
+    if (inputFile.is_open()) {
+        getline(inputFile, A);
+        getline(inputFile, B);
+        inputFile.close();
+    } else {
+        cout << "Unable to open file" << endl;
+        return 1;
+    }
 
-    // Test case 2
-    string text1_2 = "AXYT";
-    string text2_2 = "AYZX";
-    cout << "Length of Longest Common Subsequence: " << lcsOptimizer.longestCommonSubsequence(text1_2, text2_2) << endl;
+    LCSOptimizer lcs;
 
-    // Test case 3
-    string text1_3 = "AGGTAB";
-    string text2_3 = "GXTXAYB";
-    cout << "Length of Longest Common Subsequence: " << lcsOptimizer.longestCommonSubsequence(text1_3, text2_3) << endl;
+    int length = lcs.longestCommonSubsequence(A, B);
 
+    cout << "Length of Longest Common Subsequence: " << length << endl;
     return 0;
 }
